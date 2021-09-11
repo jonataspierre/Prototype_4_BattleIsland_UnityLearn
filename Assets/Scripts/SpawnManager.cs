@@ -4,20 +4,22 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
-    public GameObject enemyPrefab;
-    public GameObject powerupPrefab;
+    public GameObject[] enemyPrefab;
+    public GameObject[] powerupPrefab;
 
     private float spawnRange = 9f;
-    private float spawnDelay = 2f;
-    private float spawnRate = 3f;
 
+    public int powerupCount;
     public int enemyCount;
     public int waveNumber = 1;
-    
+
+    public GameObject bossPrefab;
+    public GameObject[] miniEnemyPrefabs;
+    public int bossRound;
+
     // Start is called before the first frame update
     void Start()
     {
-        //InvokeRepeating("SpawnEnemy", spawnDelay, spawnRate);
         SpawnEnemyWave(waveNumber);
     }
 
@@ -25,23 +27,66 @@ public class SpawnManager : MonoBehaviour
     void Update()
     {
         enemyCount = FindObjectsOfType<Enemy>().Length;
-        
+        powerupCount = FindObjectsOfType<PowerUp>().Length;
+
         if (enemyCount == 0)
         {
             waveNumber++;
-            if (waveNumber % 2 == 0)
+
+            for (int i = 0; i < powerupCount; i++)
             {
-                SpawnPowerupWave(waveNumber - 1);
+                var powerupRemove = GameObject.FindGameObjectsWithTag("Powerup");
+
+                Destroy(powerupRemove[i].gameObject);
             }
-            SpawnEnemyWave(waveNumber);
+
+            //Spawn a boss every x number of waves
+            if (waveNumber % bossRound == 0)
+            {
+                SpawnBossWave(waveNumber);
+            }
+            else
+            {
+                SpawnEnemyWave(waveNumber);
+            }
+
+            SpawnPowerupWave(waveNumber - 1);
         }
     }
 
     void SpawnEnemyWave(int enemiesToSpawn)
-    {
+    {   
         for (int i = 0; i < enemiesToSpawn; i++)
         {
-            Instantiate(enemyPrefab, GenerateSpawnPosition(), enemyPrefab.transform.rotation);
+            int enemyPrefabsIndex = Random.Range(0, enemyPrefab.Length);
+            Instantiate(enemyPrefab[enemyPrefabsIndex], GenerateSpawnPosition(), enemyPrefab[enemyPrefabsIndex].transform.rotation);
+        }
+    }
+
+    void SpawnBossWave(int currentRound)
+    {
+        int miniEnemysToSpawn;
+
+        //We dont want to divide by 0!
+        if (bossRound != 0)
+        {
+            miniEnemysToSpawn = currentRound / bossRound;
+        }
+        else
+        {
+            miniEnemysToSpawn = 1;
+        }
+
+        var boss = Instantiate(bossPrefab, GenerateSpawnPosition(), bossPrefab.transform.rotation);
+        boss.GetComponent<Enemy>().miniEnemySpawnCount = miniEnemysToSpawn;
+    }
+
+    public void SpawnMiniEnemy(int amount)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            int randomMini = Random.Range(0, miniEnemyPrefabs.Length);
+            Instantiate(miniEnemyPrefabs[randomMini], GenerateSpawnPosition(), miniEnemyPrefabs[randomMini].transform.rotation);
         }
     }
 
@@ -49,16 +94,10 @@ public class SpawnManager : MonoBehaviour
     {
         for (int i = 0; i < powerupToSpawn; i++)
         {
-            Instantiate(powerupPrefab, GenerateSpawnPosition(), powerupPrefab.transform.rotation);
+            int powerupPrefabsIndex = Random.Range(0, powerupPrefab.Length);
+            Instantiate(powerupPrefab[powerupPrefabsIndex], GenerateSpawnPosition(), powerupPrefab[powerupPrefabsIndex].transform.rotation);
         }
     }
-
-    void SpawnEnemy()
-    {
-        Instantiate(enemyPrefab, GenerateSpawnPosition(), enemyPrefab.transform.rotation);
-    }
-
-
 
     private Vector3 GenerateSpawnPosition()
     {
