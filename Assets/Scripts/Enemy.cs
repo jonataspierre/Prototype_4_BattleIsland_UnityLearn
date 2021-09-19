@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    private GameManager gameManager;
+    
     public float speed;
 
     private Rigidbody enemyRb;
@@ -15,9 +17,13 @@ public class Enemy : MonoBehaviour
     public int miniEnemySpawnCount;
     private SpawnManager spawnManager;
 
+    private float limitDown = -10.0f;
+
     // Start is called before the first frame update
     void Start()
     {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
         enemyRb = GetComponent<Rigidbody>();
         player = GameObject.Find("Player");
 
@@ -43,7 +49,12 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        if (transform.position.y < -10)
+        if (transform.position.y < limitDown)
+        {
+            Destroy(gameObject);
+        }
+
+        if (!gameManager.isGameActive)
         {
             Destroy(gameObject);
         }

@@ -5,12 +5,16 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    private GameManager gameManager;
+    
     private Rigidbody playerRb;
     private GameObject focalPoint;
     private Collider playerCollider;
     public ParticleSystem smashParticle;
     
     private float speed = 500f;
+    private bool isJump = false;
+    private float limitDown = -10.0f;
 
     [Header("Powerup Manager")]    
     public GameObject powerupIndicator;    
@@ -36,6 +40,8 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
         playerRb = GetComponent<Rigidbody>();
         playerCollider = GetComponent<Collider>();
         focalPoint = GameObject.Find("FocalPoint");
@@ -55,10 +61,18 @@ public class PlayerController : MonoBehaviour
             LaunchRockets();
         }
 
-        if (currentPowerUp == PowerUpType.Smash && Input.GetButtonDown("Jump"))
-        //if (currentPowerUp == PowerUpType.Smash && Input.GetKeyDown(KeyCode.Space))
-        {   
+        if (currentPowerUp == PowerUpType.Smash && Input.GetButtonDown("Jump") && !isJump)        
+        {
+            isJump = true;
             StartCoroutine(Smash());
+        }
+
+        if (transform.position.y < limitDown)
+        {
+            gameManager.isGameActive = false;
+            playerRb.isKinematic = true;
+            transform.position = new Vector3(0, 0, 0);
+            gameManager.GameOver();
         }
     }    
 
@@ -94,6 +108,11 @@ public class PlayerController : MonoBehaviour
             Vector3 awayFromPlayer = collision.transform.position - transform.position;
 
             enemyRigibody.AddForce(awayFromPlayer * powerupStrenght, ForceMode.Impulse);            
+        }
+
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isJump = false;
         }
     }
 

@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
+    private GameManager gameManager;
+    private int levelWave;
+    
     public GameObject[] enemyPrefab;
     public GameObject[] powerupPrefab;
 
@@ -20,7 +23,11 @@ public class SpawnManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
         SpawnEnemyWave(waveNumber);
+
+        gameManager.UpdateLevel();
     }
 
     // Update is called once per frame
@@ -29,8 +36,10 @@ public class SpawnManager : MonoBehaviour
         enemyCount = FindObjectsOfType<Enemy>().Length;
         powerupCount = FindObjectsOfType<PowerUp>().Length;
 
-        if (enemyCount == 0)
-        {
+        if (gameManager.isGameActive && enemyCount == 0)
+        {  
+            gameManager.UpdateLevel();
+
             waveNumber++;
 
             for (int i = 0; i < powerupCount; i++)
@@ -38,8 +47,8 @@ public class SpawnManager : MonoBehaviour
                 var powerupRemove = GameObject.FindGameObjectsWithTag("Powerup");
 
                 Destroy(powerupRemove[i].gameObject);
-            }
-
+            }            
+            
             //Spawn a boss every x number of waves
             if (waveNumber % bossRound == 0)
             {
